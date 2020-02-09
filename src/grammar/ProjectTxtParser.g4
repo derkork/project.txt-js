@@ -7,13 +7,13 @@ project : entry+;
 
 entry : taskEntry | personEntry;
 personEntry: PERSON_START personContent;
-personContent: (tag | label |id | email | TEXT | DOUBLE_COLON )+;
+personContent: (tag | label |id | email | TEXT | NEW_LINE | DOUBLE_COLON )+;
 email: INSTRUCTION EMAIL ADDRESS;
 
 
 taskEntry: taskState taskContent;
 taskState: (TASK_STATE_OPEN | TASK_STATE_DONE | TASK_STATE_IN_PROGRESS | TASK_STATE_MILESTONE);
-taskContent: (tag | label | id | dependency | assignment | due | estimation | schedule | TEXT | DOUBLE_COLON )+;
+taskContent: (tag | label | id | dependency | assignment | due | estimation | schedule | TEXT | NEW_LINE | DOUBLE_COLON )+;
 
 estimation: INSTRUCTION ESTIMATION duration;
 schedule: INSTRUCTION SCHEDULE date;
