@@ -3,6 +3,7 @@
  */
 import {Person} from "./Person";
 import {Entry} from "./Entry";
+import {Moment} from "moment";
 
 export enum TaskState {
     /**
@@ -39,7 +40,7 @@ export class Task extends Entry {
     /**
      * The state of this task.
      */
-    readonly state:TaskState;
+    readonly state: TaskState;
 
     /**
      * A selector function which determines if the given
@@ -67,6 +68,21 @@ export class Task extends Entry {
      */
     readonly hasAssignments: boolean;
 
+    /**
+     * A date when the task is due in the local timezone.
+     */
+    readonly dueDate: Moment | undefined;
+
+    /**
+     * A date when the task is scheduled in the local timezone.
+     */
+    readonly doDate: Moment | undefined;
+
+    /**
+     * A date when the task can start at the earliest in the local timezone.
+     */
+    readonly startDate: Moment | undefined;
+
     constructor(id: string | undefined = undefined,
                 notes: string | undefined = undefined,
                 tags: Set<string> = new Set<string>(),
@@ -74,7 +90,10 @@ export class Task extends Entry {
                 state: TaskState = TaskState.Open,
                 title: string | undefined = undefined,
                 dependencies: ((task: Task) => boolean) | undefined = undefined,
-                assignments: ((person: Person) => boolean) | undefined = undefined) {
+                assignments: ((person: Person) => boolean) | undefined = undefined,
+                dueDate: Moment | undefined,
+                doDate: Moment | undefined,
+                startDate: Moment | undefined) {
         super(id, notes, tags, labels);
 
         this.state = state;
@@ -84,5 +103,8 @@ export class Task extends Entry {
 
         this.assignments = assignments;
         this.hasAssignments = assignments !== undefined;
+        this.dueDate = dueDate;
+        this.doDate = doDate;
+        this.startDate = startDate;
     }
 }

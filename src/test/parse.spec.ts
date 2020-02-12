@@ -31,13 +31,13 @@ describe("parsing", () => {
     });
 
     it("correctly parses tags for persons", () => {
-        let input = "+ some person :@tag1 :@tag2"
+        let input = "+ some person :@tag1 :@tag2";
 
         let project = parseProject(input);
         let person = project.persons[0];
 
         expect(person.tags.size).toBe(2);
-        expect(person.tags).toContain("tag1")
+        expect(person.tags).toContain("tag1");
         expect(person.tags).toContain("tag2")
     });
 
