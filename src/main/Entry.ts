@@ -29,6 +29,7 @@ export abstract class Entry {
         tags: Set<string>,
         labels: Map<string, Set<string>>
     ) {
+        this.id = id;
         this.notes = notes;
         this.tags = tags;
         this.labels = labels;

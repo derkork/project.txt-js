@@ -30,7 +30,7 @@ import {
 } from "./parser/ProjectTxtParser";
 import {ParserRuleContext} from "antlr4ts";
 import {ProjectTxtLexer} from "./parser/ProjectTxtLexer";
-import moment, {HTML5_FMT, Moment} from "moment";
+import moment, {duration, Duration, HTML5_FMT, Moment} from "moment";
 
 /**
  * Helper for representing text content as a first and a last part.
@@ -101,6 +101,7 @@ export class TreeVisitor
         let dueDate = TreeVisitor.visitForDueDate(taskContent);
         let doDate = TreeVisitor.visitForDoDate(taskContent);
         let startDate = TreeVisitor.visitForStartDate(taskContent);
+        let effort = TreeVisitor.visitForEffort(taskContent);
 
 
         return new TreeElement(new Task(
@@ -114,7 +115,8 @@ export class TreeVisitor
             assignments,
             dueDate,
             doDate,
-            startDate
+            startDate,
+            effort
         ));
     }
 
@@ -368,15 +370,55 @@ export class TreeVisitor
     /**
      * Tries to parse a date from the given date context. If it is not parsable returns undefined, otherwise a Moment.
      */
-    private static visitForDate(dateContext: DateContext) : Moment | undefined {
-        let dateString = dateContext.text;
+    private static visitForDate(dateContext: DateContext): Moment | undefined {
+        const dateString = dateContext.text;
 
-        let date = moment(dateString, HTML5_FMT.DATE, true);
+        const date = moment(dateString, HTML5_FMT.DATE, true);
         if (date.isValid()) {
             return date;
         }
 
         // todo: +error-handling report invalid date
         return undefined;
+    }
+
+    /**
+     * Returns an effort estimation of the task as indicated by the effort instruction.
+     */
+    private static visitForEffort(ctx: TaskContentContext): Duration | undefined {
+        const effortContexts = ctx.effort();
+        if (effortContexts.length === 0) {
+            return undefined;
+        }
+
+        // todo: +error-handling handle duplicate effort estimation
+        const effortContext = effortContexts[0];
+
+        let days = 0;
+        let hours = 0;
+        let minutes = 0;
+        const daysContexts = effortContext.duration().days();
+        if (daysContexts.length !== 0) {
+            // todo: +error handling duplicate days
+            days = parseInt(daysContexts[0].AMOUNT().text);
+        }
+
+        const hoursContexts = effortContext.duration().hours();
+        if (hoursContexts.length !== null) {
+            // todo: +error handling duplicate hours
+            hours = parseInt(hoursContexts[0].AMOUNT().text);
+        }
+
+        const minutesContexts = effortContext.duration().minutes();
+        if (minutesContexts.length !== null) {
+            // todo: +error handling duplicate minutes
+            minutes = parseInt(minutesContexts[0].AMOUNT().text);
+        }
+
+        return duration({
+            "days": days,
+            "hours": hours,
+            "minutes": minutes
+        });
     }
 }

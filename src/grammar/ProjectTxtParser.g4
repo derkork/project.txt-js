@@ -13,14 +13,18 @@ email: INSTRUCTION EMAIL ADDRESS;
 
 taskEntry: taskState taskContent;
 taskState: (TASK_STATE_OPEN | TASK_STATE_DONE | TASK_STATE_IN_PROGRESS | TASK_STATE_ON_HOLD | TASK_STATE_MILESTONE);
-taskContent: (tag | label | id | dependency | assignment | dueDate | estimation | doDate | startDate | TEXT | NEW_LINE | DOUBLE_COLON )+;
+taskContent: (tag | label | id | dependency | assignment | dueDate | effort | doDate | startDate | TEXT | NEW_LINE | DOUBLE_COLON )+;
 
-estimation: INSTRUCTION ESTIMATION duration;
+effort: INSTRUCTION EFFORT duration;
 doDate: INSTRUCTION SCHEDULE date;
 dueDate: INSTRUCTION DUE date;
 startDate: INSTRUCTION START date;
 
-duration: (DAYS|HOURS|MINUTES)+;
+duration: (days|hours|minutes)+;
+days: AMOUNT DAY;
+hours: AMOUNT HOUR;
+minutes: AMOUNT MINUTE;
+
 date: YEAR HYPHEN MONTH_OR_DAY HYPHEN MONTH_OR_DAY;
 
 id: INSTRUCTION idDefinition;

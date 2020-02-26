@@ -3,7 +3,7 @@
  */
 import {Person} from "./Person";
 import {Entry} from "./Entry";
-import {Moment} from "moment";
+import {Duration, Moment} from "moment";
 
 export enum TaskState {
     /**
@@ -44,29 +44,16 @@ export class Task extends Entry {
 
     /**
      * A selector function which determines if the given
-     * task is a prerequisite for this task.
+     * task is a prerequisite for this task. If this task has no dependencies
+     * this function is undefined.
      */
     readonly dependencies: ((task: Task) => boolean) | undefined;
-
-    /**
-     * An indicator whether or not this task has any expressed dependencies.
-     * This is mainly there in order to avoid needless computation cycles
-     * if this task has not expressed any dependencies to other tasks.
-     */
-    readonly hasDependencies: boolean;
 
     /**
      * A selector function which determines if the given person
      * is assigned to this task.
      */
     readonly assignments: ((person: Person) => boolean) | undefined;
-
-    /**
-     * An indicator whether or not this task has any expressed assignments.
-     * This is mainly there in order to avoid needles computation cycles if
-     * this task has not expressed any assignments.
-     */
-    readonly hasAssignments: boolean;
 
     /**
      * A date when the task is due in the local timezone.
@@ -83,6 +70,11 @@ export class Task extends Entry {
      */
     readonly startDate: Moment | undefined;
 
+    /**
+     * An estimation of how long the task may need to finish.
+     */
+    readonly effort: Duration | undefined;
+
     constructor(id: string | undefined = undefined,
                 notes: string | undefined = undefined,
                 tags: Set<string> = new Set<string>(),
@@ -93,18 +85,17 @@ export class Task extends Entry {
                 assignments: ((person: Person) => boolean) | undefined = undefined,
                 dueDate: Moment | undefined,
                 doDate: Moment | undefined,
-                startDate: Moment | undefined) {
+                startDate: Moment | undefined,
+                effort: Duration | undefined ) {
         super(id, notes, tags, labels);
 
         this.state = state;
         this.title = title;
         this.dependencies = dependencies;
-        this.hasDependencies = dependencies !== undefined;
-
         this.assignments = assignments;
-        this.hasAssignments = assignments !== undefined;
         this.dueDate = dueDate;
         this.doDate = doDate;
         this.startDate = startDate;
+        this.effort = effort;
     }
 }
