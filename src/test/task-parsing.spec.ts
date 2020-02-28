@@ -1,5 +1,6 @@
 // @ts-ignore
 import {parseProject} from './test-helpers';
+import {TaskState} from "../main";
 
 
 describe("parsing tasks", () => {
@@ -87,7 +88,7 @@ describe("parsing tasks", () => {
         const task = project.tasks[0];
 
         expect(task.effort).toBeDefined();
-        expect(task.effort?.asSeconds()).toBe( 24 * 3600 + 2 * 3600 + 4 * 60);
+        expect(task.effort?.asSeconds()).toBe(24 * 3600 + 2 * 3600 + 4 * 60);
     });
 
 
@@ -107,8 +108,7 @@ describe("parsing tasks", () => {
             "[ ] some other task :<#tsk1";
 
         const project = parseProject(input);
-        const firstTask = project.tasks[0];
-        const secondTask = project.tasks[1];
+        const [firstTask, secondTask] = project.tasks;
 
         expect(firstTask.dependencies).toBeUndefined();
         expect(secondTask.dependencies).toBeDefined();
@@ -124,9 +124,7 @@ describe("parsing tasks", () => {
             "[ ] some other task :<@tag";
 
         const project = parseProject(input);
-        const firstTask = project.tasks[0];
-        const secondTask = project.tasks[1];
-        const thirdTask = project.tasks[2];
+        const [firstTask, secondTask, thirdTask] = project.tasks;
 
         expect(firstTask.dependencies).toBeUndefined();
         expect(secondTask.dependencies).toBeUndefined();
@@ -144,9 +142,7 @@ describe("parsing tasks", () => {
             "[ ] some other task :<@foo:bar";
 
         const project = parseProject(input);
-        const firstTask = project.tasks[0];
-        const secondTask = project.tasks[1];
-        const thirdTask = project.tasks[2];
+        const [firstTask, secondTask, thirdTask] = project.tasks;
 
         expect(firstTask.dependencies).toBeUndefined();
         expect(secondTask.dependencies).toBeUndefined();
@@ -163,9 +159,7 @@ describe("parsing tasks", () => {
             "[ ] some other task :<@foo :<#tsk1";
 
         const project = parseProject(input);
-        const firstTask = project.tasks[0];
-        const secondTask = project.tasks[1];
-        const thirdTask = project.tasks[2];
+        const [firstTask, secondTask, thirdTask] = project.tasks;
 
         expect(firstTask.dependencies).toBeUndefined();
         expect(secondTask.dependencies).toBeDefined();
@@ -212,14 +206,26 @@ describe("parsing tasks", () => {
 
         const project = parseProject(input);
         const task = project.tasks[0];
-        const person1 = project.persons[0];
-        const person2 = project.persons[1];
+        const [person1, person2] = project.persons;
 
         expect(task.assignments).toBeDefined();
         expect(task.assignments!(person1)).toBeTruthy();
         expect(task.assignments!(person2)).toBeFalsy();
     });
 
+    it.each([
+        ["[ ] open task", TaskState.Open],
+        ["[x] done task", TaskState.Done],
+        ["[m] milestone task", TaskState.Milestone],
+        ["[M] milestone task", TaskState.Milestone],
+        ["[!] on-hold task", TaskState.OnHold],
+        ["[>] in-progress task", TaskState.InProgress],
+        ]
+    )("correctly parses task states: %s => %s", (input:string, expected:TaskState) => {
+        const task = parseProject(input).tasks[0];
+
+        expect(task.state).toBe(expected);
+    });
 
 
 });
