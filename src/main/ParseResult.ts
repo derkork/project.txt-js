@@ -1,5 +1,8 @@
 import {Project} from "./Project";
 
+/**
+ * The result of parsing a project definition.
+ */
 export class ParseResult {
     /**
      * The parsed project. In case of errors this may be incomplete.

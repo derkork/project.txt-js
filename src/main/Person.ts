@@ -1,5 +1,8 @@
 import {Entry} from "./Entry";
 
+/**
+ * A person who works on a project.
+ */
 export class Person extends Entry {
     /**
      * The name of the person.

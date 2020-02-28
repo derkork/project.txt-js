@@ -22,7 +22,6 @@ export abstract class Entry {
      */
     readonly labels: Map<string, Set<string>>;
 
-
     protected constructor(
         id: string | undefined,
         notes: string | undefined,

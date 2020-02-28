@@ -17,7 +17,6 @@ export function matchPersonById(id: string): (person: Person) => boolean {
     return person => person.id === id;
 }
 
-
 /**
  * Returns a task matcher that returns true if the matched task has a label with the given value.
  */

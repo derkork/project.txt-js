@@ -5,6 +5,9 @@ import {Person} from "./Person";
 import {Entry} from "./Entry";
 import {Duration, Moment} from "moment";
 
+/**
+ * The state of a task.
+ */
 export enum TaskState {
     /**
      * The task is not yet done and not started.
