@@ -15,6 +15,8 @@ export class Person extends Entry {
     readonly emailAddress: string | undefined;
 
     constructor(
+        index: number,
+        lineNumber: number,
         id: string | undefined = undefined,
         notes: string | undefined = undefined,
         tags: Set<string> = new Set<string>(),
@@ -22,7 +24,7 @@ export class Person extends Entry {
         name: string | undefined,
         emailAddress: string | undefined
     ) {
-        super(id, notes, tags, labels);
+        super(index, lineNumber, id, notes, tags, labels);
 
         this.name = name;
         this.emailAddress = emailAddress;

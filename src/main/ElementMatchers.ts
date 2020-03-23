@@ -25,6 +25,13 @@ export function matchTaskByLabel(label: string, value: string): (task: Task) => 
 }
 
 /**
+ * Returns a task matcher that returns true if the matched task has a certain index.
+ */
+export function matchTaskByIndex(index:number) : (task:Task) => boolean {
+    return task => task.index === index;
+}
+
+/**
  * Returns a person matcher that returns true if the matched person has has a label with the given value.
  */
 export function matchPersonByLabel(label: string, value: string): (person: Person) => boolean {

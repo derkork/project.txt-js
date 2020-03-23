@@ -1,6 +1,7 @@
 // @ts-ignore
 import {parseProject} from './test-helpers';
 import {TaskState} from "../main";
+import lightFormat from 'date-fns/lightFormat';
 
 
 describe("parsing tasks", () => {
@@ -17,6 +18,18 @@ describe("parsing tasks", () => {
 
         expect(task.notes).toContain("It has notes.");
         expect(task.notes).not.toContain("This is a task");
+    });
+
+    it("assigns indices to tasks", () => {
+        const input =
+            "[ ] some task\n" +
+            "+  some person \n" +
+            "[ ] some other task";
+        const project = parseProject(input);
+        const [task1, task2] = project.tasks;
+
+        expect(task1.index).toBe(0);
+        expect(task2.index).toBe(1);
     });
 
     it("correctly parses tags for tasks", () => {
@@ -57,7 +70,7 @@ describe("parsing tasks", () => {
         const task = project.tasks[0];
 
         expect(task.dueDate).toBeDefined();
-        expect(task.dueDate?.format("YYYY-MM-DD")).toBe("2020-10-10");
+        expect(lightFormat(task.dueDate!, "yyyy-MM-dd")).toBe("2020-10-10");
 
     });
 
@@ -68,7 +81,7 @@ describe("parsing tasks", () => {
         const task = project.tasks[0];
 
         expect(task.doDate).toBeDefined();
-        expect(task.doDate?.format("YYYY-MM-DD")).toBe("2020-10-10");
+        expect(lightFormat(task.doDate!, "yyyy-MM-dd")).toBe("2020-10-10");
     });
 
     it("correctly parses start dates for tasks", () => {
@@ -78,7 +91,7 @@ describe("parsing tasks", () => {
         const task = project.tasks[0];
 
         expect(task.startDate).toBeDefined();
-        expect(task.startDate?.format("YYYY-MM-DD")).toBe("2020-10-10");
+        expect(lightFormat(task.startDate!, "yyyy-MM-dd")).toBe("2020-10-10");
     });
 
     it("correctly parses effort for tasks", () => {
@@ -88,7 +101,9 @@ describe("parsing tasks", () => {
         const task = project.tasks[0];
 
         expect(task.effort).toBeDefined();
-        expect(task.effort?.asSeconds()).toBe(24 * 3600 + 2 * 3600 + 4 * 60);
+        expect(task.effort!.days).toBe(1);
+        expect(task.effort!.hours).toBe(2);
+        expect(task.effort!.minutes).toBe(4);
     });
 
 
@@ -152,6 +167,21 @@ describe("parsing tasks", () => {
         expect(thirdTask.dependencies!(secondTask)).toBe(true);
     });
 
+    it("correctly parses dependencies using the previous task shortcut", () => {
+        const input =
+            "[ ] a task\n" +
+            "[ ] a task depending on the previous one :<<\n";
+
+        const project = parseProject(input);
+        const [firstTask, secondTask] = project.tasks;
+
+        expect(firstTask.dependencies).toBeUndefined();
+        expect(secondTask.dependencies).toBeDefined();
+
+        expect(secondTask.dependencies!(firstTask)).toBeTruthy();
+    });
+
+
     it("correctly parses mixed dependencies", () => {
         const input =
             "[ ] some task :@foo\n" +
@@ -214,14 +244,14 @@ describe("parsing tasks", () => {
     });
 
     it.each([
-        ["[ ] open task", TaskState.Open],
-        ["[x] done task", TaskState.Done],
-        ["[m] milestone task", TaskState.Milestone],
-        ["[M] milestone task", TaskState.Milestone],
-        ["[!] on-hold task", TaskState.OnHold],
-        ["[>] in-progress task", TaskState.InProgress],
+            ["[ ] open task", TaskState.Open],
+            ["[x] done task", TaskState.Done],
+            ["[m] milestone task", TaskState.Milestone],
+            ["[M] milestone task", TaskState.Milestone],
+            ["[!] on-hold task", TaskState.OnHold],
+            ["[>] in-progress task", TaskState.InProgress],
         ]
-    )("correctly parses task states: %s => %s", (input:string, expected:TaskState) => {
+    )("correctly parses task states: %s => %s", (input: string, expected: TaskState) => {
         const task = parseProject(input).tasks[0];
 
         expect(task.state).toBe(expected);

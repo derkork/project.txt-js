@@ -1,6 +1,7 @@
 // @ts-ignore
 import {parseProject} from './test-helpers';
 import {calculateDependencies} from "../main";
+import {ProjectCalculationSettings} from "../main/ProjectCalculationSettings";
 
 describe("calculating dependencies", () => {
 
@@ -13,7 +14,7 @@ describe("calculating dependencies", () => {
             "[ ] this is a fifth task :<@label:value";
 
         const project = parseProject(input);
-        const dependencies = calculateDependencies(project);
+        const dependencies = calculateDependencies(project, ProjectCalculationSettings.default());
 
         const [task1, task2, task3, task4, task5] = project.tasks;
 

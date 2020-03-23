@@ -10,7 +10,7 @@ import {
     matchPersonById,
     matchPersonByLabel,
     matchPersonByTag,
-    matchTaskById,
+    matchTaskById, matchTaskByIndex,
     matchTaskByLabel,
     matchTaskByTag
 } from "./ElementMatchers";
@@ -30,7 +30,10 @@ import {
 } from "./parser/ProjectTxtParser";
 import {ParserRuleContext} from "antlr4ts";
 import {ProjectTxtLexer} from "./parser/ProjectTxtLexer";
-import moment, {duration, Duration, HTML5_FMT, Moment} from "moment";
+import parseISO from 'date-fns/parseISO';
+import isValid from 'date-fns/isValid';
+import IndexTracker from "./IndexTracker";
+import {Effort} from "./Effort";
 
 /**
  * Helper for representing text content as a first and a last part.
@@ -58,28 +61,32 @@ export class TreeVisitor
 
 
     public visitProject(ctx: ProjectContext): TreeElement {
-        let projectElements = ctx.entry()
-            .map(value => this.visitEntry(value));
+        const indexTracker = new IndexTracker();
 
-        let people = projectElements
+        const projectElements = ctx.entry()
+            .map(value => TreeVisitor.visitEntry(indexTracker, value));
+
+        const people = projectElements
             .filter(it => it.element instanceof Person)
             .map(it => it.element as Person);
 
-        let tasks = projectElements
+        const tasks = projectElements
             .filter(it => it.element instanceof Task)
             .map(it => it.element as Task);
 
         return new TreeElement(new Project(people, tasks));
     }
 
-    public visitEntry(ctx: EntryContext): TreeElement {
+    private static visitEntry(indexTracker:IndexTracker, ctx: EntryContext): TreeElement {
+
+
         let personEntry = ctx.personEntry();
         if (personEntry) {
-            return this.visitPersonEntry(personEntry);
+            return TreeVisitor.visitPersonEntry(indexTracker.getAndAdd(Person), personEntry);
         }
         let taskEntry = ctx.taskEntry();
         if (taskEntry) {
-            return this.visitTaskEntry(taskEntry);
+            return TreeVisitor.visitTaskEntry(indexTracker.getAndAdd(Task), taskEntry);
         }
 
         return new TreeElement("Error");
@@ -88,7 +95,7 @@ export class TreeVisitor
     /**
      * Visits a task entry and creates a tree element containing a <code>Task</code> object.
      */
-    public visitTaskEntry(ctx: TaskEntryContext): TreeElement {
+    private static visitTaskEntry(index:number, ctx: TaskEntryContext): TreeElement {
         let taskContent = ctx.taskContent();
         let state = TreeVisitor.visitForTaskState(ctx.taskState());
 
@@ -96,7 +103,7 @@ export class TreeVisitor
         let tags = TreeVisitor.visitForTags(taskContent);
         let labels = TreeVisitor.visitForLabels(taskContent);
         let text = TreeVisitor.visitForText(taskContent);
-        let dependencies = TreeVisitor.visitForDependencies(taskContent);
+        let dependencies = TreeVisitor.visitForDependencies(index, taskContent);
         let assignments = TreeVisitor.visitForAssignments(taskContent);
         let dueDate = TreeVisitor.visitForDueDate(taskContent);
         let doDate = TreeVisitor.visitForDoDate(taskContent);
@@ -105,6 +112,8 @@ export class TreeVisitor
 
 
         return new TreeElement(new Task(
+            index,
+            ctx._start.line,
             id,
             text.last,
             tags,
@@ -124,7 +133,7 @@ export class TreeVisitor
     /**
      * Visits a person entry and creates a tree element containing a <code>Person</code> object.
      */
-    public visitPersonEntry(ctx: PersonEntryContext): TreeElement {
+    private static visitPersonEntry(index:number, ctx: PersonEntryContext): TreeElement {
         let personContent = ctx.personContent();
 
         let id = TreeVisitor.visitForId(personContent);
@@ -135,6 +144,8 @@ export class TreeVisitor
 
         return new TreeElement(
             new Person(
+                ctx._start.line,
+                index,
                 id,
                 text.last,
                 tags,
@@ -263,7 +274,7 @@ export class TreeVisitor
      * Returns a function that can resolve the task's dependencies as indicated by
      * the task content. Returns undefined if the task has no declared dependencies.
      */
-    private static visitForDependencies(ctx: TaskContentContext): ((task: Task) => boolean) | undefined {
+    private static visitForDependencies(taskIndex:number, ctx: TaskContentContext): ((task: Task) => boolean) | undefined {
         let dependencies = ctx.dependency();
         if (dependencies.length === 0) {
             return undefined;
@@ -285,6 +296,11 @@ export class TreeVisitor
                 let labelDefinition = it.labelDefinition();
                 if (labelDefinition) {
                     return matchTaskByLabel(labelDefinition.IDENTIFIER()[0].text, labelDefinition.IDENTIFIER()[1].text);
+                }
+
+                let previousTaskDefinition = it.previousTask();
+                if (previousTaskDefinition) {
+                    return matchTaskByIndex(taskIndex - 1);
                 }
 
                 // TODO: +error-handling
@@ -330,7 +346,7 @@ export class TreeVisitor
     /**
      * Returns a date at which the task is due as indicated by the due instruction of the task.
      */
-    private static visitForDueDate(ctx: TaskContentContext): Moment | undefined {
+    private static visitForDueDate(ctx: TaskContentContext): Date | undefined {
         let dueContexts = ctx.dueDate();
         if (dueContexts.length === 0) {
             return undefined;
@@ -343,7 +359,7 @@ export class TreeVisitor
     /**
      * Returns a date at which the task is planned to be done as indicated by the do instruction of the task.
      */
-    private static visitForDoDate(ctx: TaskContentContext): Moment | undefined {
+    private static visitForDoDate(ctx: TaskContentContext): Date | undefined {
         let scheduleContexts = ctx.doDate();
         if (scheduleContexts.length === 0) {
             return undefined;
@@ -356,7 +372,7 @@ export class TreeVisitor
     /**
      * Returns a date at which the task can start at the earliest as indicated by the start instruction of the task.
      */
-    private static visitForStartDate(ctx: TaskContentContext): Moment | undefined {
+    private static visitForStartDate(ctx: TaskContentContext): Date | undefined {
         let startContexts = ctx.startDate();
         if (startContexts.length === 0) {
             return undefined;
@@ -370,11 +386,11 @@ export class TreeVisitor
     /**
      * Tries to parse a date from the given date context. If it is not parsable returns undefined, otherwise a Moment.
      */
-    private static visitForDate(dateContext: DateContext): Moment | undefined {
+    private static visitForDate(dateContext: DateContext): Date | undefined {
         const dateString = dateContext.text;
 
-        const date = moment(dateString, HTML5_FMT.DATE, true);
-        if (date.isValid()) {
+        const date = parseISO(dateString);
+        if (isValid(date)) {
             return date;
         }
 
@@ -385,7 +401,7 @@ export class TreeVisitor
     /**
      * Returns an effort estimation of the task as indicated by the effort instruction.
      */
-    private static visitForEffort(ctx: TaskContentContext): Duration | undefined {
+    private static visitForEffort(ctx: TaskContentContext): Effort | undefined {
         const effortContexts = ctx.effort();
         if (effortContexts.length === 0) {
             return undefined;
@@ -404,21 +420,21 @@ export class TreeVisitor
         }
 
         const hoursContexts = effortContext.duration().hours();
-        if (hoursContexts.length !== null) {
+        if (hoursContexts.length !== 0) {
             // todo: +error handling duplicate hours
             hours = parseInt(hoursContexts[0].AMOUNT().text);
         }
 
         const minutesContexts = effortContext.duration().minutes();
-        if (minutesContexts.length !== null) {
+        if (minutesContexts.length !== 0) {
             // todo: +error handling duplicate minutes
             minutes = parseInt(minutesContexts[0].AMOUNT().text);
         }
 
-        return duration({
-            "days": days,
-            "hours": hours,
-            "minutes": minutes
-        });
+        return new Effort(
+            days,
+            hours,
+            minutes
+        );
     }
 }

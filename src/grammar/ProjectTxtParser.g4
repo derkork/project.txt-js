@@ -34,5 +34,6 @@ tagDefinition: LABELREF IDENTIFIER;
 label: INSTRUCTION labelDefinition;
 labelDefinition: LABELREF IDENTIFIER SEPARATOR IDENTIFIER;
 
-dependency: INSTRUCTION DEPENDENCY ( idDefinition | tagDefinition | labelDefinition );
+dependency: INSTRUCTION DEPENDENCY ( idDefinition | tagDefinition | labelDefinition | previousTask );
+previousTask: DEPENDENCY;
 assignment: INSTRUCTION ASSIGNMENT ( idDefinition | tagDefinition | labelDefinition);

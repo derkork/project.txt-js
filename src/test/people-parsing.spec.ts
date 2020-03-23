@@ -29,6 +29,20 @@ describe("parsing people", () => {
         expect(person.tags).toContain("tag2")
     });
 
+    it("assigns indices to persons", () => {
+        const input =
+            "+ another person\n"+
+            "[ ] some task\n" +
+            "+  some person \n" +
+            "[ ] some other task";
+        const project = parseProject(input);
+        const [person1, person2] = project.persons;
+
+        expect(person1.index).toBe(0);
+        expect(person2.index).toBe(1);
+    });
+
+
     it("correctly parses ids for persons", () => {
         const input = "+ some person :#person";
 

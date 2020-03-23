@@ -3,7 +3,7 @@
  */
 import {Person} from "./Person";
 import {Entry} from "./Entry";
-import {Duration, Moment} from "moment";
+import {Effort} from "./Effort";
 
 /**
  * The state of a task.
@@ -61,24 +61,26 @@ export class Task extends Entry {
     /**
      * A date when the task is due in the local timezone.
      */
-    readonly dueDate: Moment | undefined;
+    readonly dueDate: Date | undefined;
 
     /**
      * A date when the task is scheduled in the local timezone.
      */
-    readonly doDate: Moment | undefined;
+    readonly doDate: Date | undefined;
 
     /**
      * A date when the task can start at the earliest in the local timezone.
      */
-    readonly startDate: Moment | undefined;
+    readonly startDate: Date | undefined;
 
     /**
      * An estimation of how long the task may need to finish.
      */
-    readonly effort: Duration | undefined;
+    readonly effort: Effort | undefined;
 
-    constructor(id: string | undefined = undefined,
+    constructor(index:number,
+                lineNumber: number,
+                id: string | undefined = undefined,
                 notes: string | undefined = undefined,
                 tags: Set<string> = new Set<string>(),
                 labels: Map<string, Set<string>> = new Map<string, Set<string>>(),
@@ -86,11 +88,11 @@ export class Task extends Entry {
                 title: string | undefined = undefined,
                 dependencies: ((task: Task) => boolean) | undefined = undefined,
                 assignments: ((person: Person) => boolean) | undefined = undefined,
-                dueDate: Moment | undefined,
-                doDate: Moment | undefined,
-                startDate: Moment | undefined,
-                effort: Duration | undefined ) {
-        super(id, notes, tags, labels);
+                dueDate: Date | undefined,
+                doDate: Date | undefined,
+                startDate: Date | undefined,
+                effort: Effort | undefined ) {
+        super(index, lineNumber, id, notes, tags, labels);
 
         this.state = state;
         this.title = title;
