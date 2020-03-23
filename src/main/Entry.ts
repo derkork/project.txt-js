@@ -1,7 +1,6 @@
 /**
  * Base class for entries which has common functionality.
  */
-import uuid, {v4 as uuidV4} from "uuid";
 
 export abstract class Entry {
     /**
