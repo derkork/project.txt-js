@@ -3,7 +3,6 @@
 ## What is it?
 This is is a library for parsing and processing project plans in the [`project.txt` format](https://github.com/derkork/project.txt-spec). It provides no rendering functionality. If you want a ready-to-use editor, have a look at [project.txt Viewer](https://github.com/derkork/project.txt-viewer).
 
-Note, that this library is currently in development and the API is not stable. If you want to use this in your own projects be prepared for API changes. This library uses [semantic versioning](https://semver.org/).
 
 ## Usage
 
