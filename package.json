@@ -9,7 +9,8 @@
         "clean": "rimraf -- build lib src/main/parser",
         "compile": "tsc",
         "test": "jest",
-        "generate-sources": "antlr4ts -visitor src/grammar/ProjectTxtLexer.g4 src/grammar/ProjectTxtParser.g4 -o src/main/parser"
+        "generate-sources": "antlr4ts -visitor src/grammar/ProjectTxtLexer.g4 src/grammar/ProjectTxtParser.g4 -o src/main/parser",
+        "release" : "npm run clean && npm run build && npm run test && npm publish"
     },
     "author": "Jan Thomä (https://github.com/derkork/project.txt-js)",
     "license": "MIT",
