@@ -15,6 +15,7 @@ import startOfDay from 'date-fns/startOfDay';
 import addBusinessDays from 'date-fns/addBusinessDays';
 import addMinutes from 'date-fns/addMinutes';
 import differenceInMinutes from 'date-fns/differenceInMinutes';
+import {EffectiveTaskState} from "./EffectiveTaskState";
 
 //#region Exports
 export {Project} from "./Project";
@@ -22,6 +23,7 @@ export {Task, TaskState} from "./Task";
 export {Person} from "./Person";
 export {ParseResult} from "./ParseResult";
 export {ProjectDependencies} from "./ProjectDependencies";
+export {EffectiveTaskState} from "./EffectiveTaskState";
 export {FinishDate} from "./FinishDate";
 export {ProjectCalculationSettings} from "./ProjectCalculationSettings";
 //#endregion
@@ -52,6 +54,7 @@ export function calculateDependencies(project: Project, settings: ProjectCalcula
     const dependencyMap = new Map<Task, Array<Task>>();
     const assignmentMap = new Map<Task, Array<Person>>();
     const finishDatesMap = new Map<Task, FinishDate>();
+    const effectiveTaskStateMap = new Map<Task,EffectiveTaskState>();
 
     for (const task of project.tasks) {
         if (!task.dependencies) {
@@ -167,5 +170,61 @@ export function calculateDependencies(project: Project, settings: ProjectCalcula
     }
 
 
-    return new ProjectDependencies(dependencyMap, assignmentMap, finishDatesMap);
+
+    function calculateEffectiveTaskState(task:Task) : EffectiveTaskState {
+        if (effectiveTaskStateMap.has(task)) {
+            // @ts-ignore we know that the task is in the map
+            return effectiveTaskStateMap.get(task);
+        }
+
+        if (visited.has(task)) {
+            // this is a circle, so we go "blocked"
+            return EffectiveTaskState.Blocked;
+        }
+
+        visited.add(task);
+
+        switch(task.state) {
+            case TaskState.Done:
+                effectiveTaskStateMap.set(task, EffectiveTaskState.Done);
+                return EffectiveTaskState.Done;
+            case TaskState.InProgress:
+                effectiveTaskStateMap.set(task, EffectiveTaskState.InProgress);
+                return EffectiveTaskState.InProgress;
+            case TaskState.OnHold:
+                effectiveTaskStateMap.set(task, EffectiveTaskState.OnHold);
+                return EffectiveTaskState.OnHold;
+            case TaskState.Open:
+                // if the task is open, it may be blocked by other tasks
+                for (let dependency of dependencyMap.get(task) || []) {
+                    // if any dependency is not yet done, this task is blocked.
+                    if (calculateEffectiveTaskState(dependency) !== EffectiveTaskState.Done) {
+                        effectiveTaskStateMap.set(task, EffectiveTaskState.Blocked);
+                        return EffectiveTaskState.Blocked;
+                    }
+                }
+                // no dependency is blocking this, so this is open
+                effectiveTaskStateMap.set(task, EffectiveTaskState.Open);
+                return EffectiveTaskState.Open;
+            case TaskState.Milestone:
+                // if the task is open, it may be blocked by other tasks
+                for (let dependency of dependencyMap.get(task) || []) {
+                    // if any dependency is not yet done, this task is blocked.
+                    if (calculateEffectiveTaskState(dependency) !== EffectiveTaskState.Done) {
+                        effectiveTaskStateMap.set(task, EffectiveTaskState.Blocked);
+                        return EffectiveTaskState.Blocked;
+                    }
+                }
+                // no dependency is blocking this, so this is done (as it is a mile stone)
+                effectiveTaskStateMap.set(task, EffectiveTaskState.Done);
+                return EffectiveTaskState.Done;
+
+        }
+    }
+
+    visited.clear();
+    for (const task of project.tasks) {
+        calculateEffectiveTaskState(task);
+    }
+    return new ProjectDependencies(dependencyMap, assignmentMap, finishDatesMap, effectiveTaskStateMap);
 }

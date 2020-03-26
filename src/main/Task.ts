@@ -6,7 +6,7 @@ import {Entry} from "./Entry";
 import {Effort} from "./Effort";
 
 /**
- * The state of a task.
+ * The state of a task as it is declared in the project file.
  */
 export enum TaskState {
     /**
