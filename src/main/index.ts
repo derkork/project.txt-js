@@ -14,6 +14,7 @@ import addDays from 'date-fns/addDays';
 import startOfDay from 'date-fns/startOfDay';
 import addBusinessDays from 'date-fns/addBusinessDays';
 import addMinutes from 'date-fns/addMinutes';
+import isBefore from 'date-fns/isBefore';
 import differenceInMinutes from 'date-fns/differenceInMinutes';
 import {EffectiveTaskState} from "./EffectiveTaskState";
 
@@ -185,6 +186,9 @@ export function calculateDependencies(project: Project, settings: ProjectCalcula
         visited.add(task);
 
         switch(task.state) {
+            // the following tasks states are always IS states, that is they override the PLAN
+            // e.g. if a standard task is marked as Done, this will not be changed by any
+            // prerequisite task anymore. same goes for "on hold" and "in progress" tasks.
             case TaskState.Done:
                 effectiveTaskStateMap.set(task, EffectiveTaskState.Done);
                 return EffectiveTaskState.Done;
@@ -194,20 +198,19 @@ export function calculateDependencies(project: Project, settings: ProjectCalcula
             case TaskState.OnHold:
                 effectiveTaskStateMap.set(task, EffectiveTaskState.OnHold);
                 return EffectiveTaskState.OnHold;
+            // tasks in state OPEN and Milestone are PLAN tasks, that is their effective state
+            // changes depending on their surroundings and their settings.
             case TaskState.Open:
-                // if the task is open, it may be blocked by other tasks
-                for (let dependency of dependencyMap.get(task) || []) {
-                    // if any dependency is not yet done, this task is blocked.
-                    if (calculateEffectiveTaskState(dependency) !== EffectiveTaskState.Done) {
-                        effectiveTaskStateMap.set(task, EffectiveTaskState.Blocked);
-                        return EffectiveTaskState.Blocked;
-                    }
-                }
-                // no dependency is blocking this, so this is open
-                effectiveTaskStateMap.set(task, EffectiveTaskState.Open);
-                return EffectiveTaskState.Open;
             case TaskState.Milestone:
-                // if the task is open, it may be blocked by other tasks
+                // if an open task or milestone has a start date which is not yet reached
+                // we mark it as blocked, no matter what their dependencies have to say.
+                if (task.startDate && isBefore(new Date(), task.startDate)) {
+                    effectiveTaskStateMap.set(task, EffectiveTaskState.Blocked);
+                    return EffectiveTaskState.Blocked;
+                }
+
+                // Now check the dependencies and see if all prerequisites are done. If there is a single
+                // dependency not done, we mark this as "blocked".
                 for (let dependency of dependencyMap.get(task) || []) {
                     // if any dependency is not yet done, this task is blocked.
                     if (calculateEffectiveTaskState(dependency) !== EffectiveTaskState.Done) {
@@ -215,10 +218,12 @@ export function calculateDependencies(project: Project, settings: ProjectCalcula
                         return EffectiveTaskState.Blocked;
                     }
                 }
-                // no dependency is blocking this, so this is done (as it is a mile stone)
-                effectiveTaskStateMap.set(task, EffectiveTaskState.Done);
-                return EffectiveTaskState.Done;
 
+                // no dependency is blocking then an Open task will have effective task state of
+                // Open, while a mile stone will get an effective task state of Done.
+                const effectiveState = task.state === TaskState.Open ? EffectiveTaskState.Open : EffectiveTaskState.Done;
+                effectiveTaskStateMap.set(task, effectiveState);
+                return effectiveState;
         }
     }
 

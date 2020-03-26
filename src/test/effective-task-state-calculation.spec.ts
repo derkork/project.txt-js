@@ -3,6 +3,7 @@ import {parseProject} from './test-helpers';
 import {calculateDependencies} from "../main";
 import {ProjectCalculationSettings} from '../main';
 import {EffectiveTaskState} from '../main';
+import {addDays, lightFormat} from "date-fns";
 
 
 describe("calculating effective task states", () => {
@@ -100,7 +101,7 @@ describe("calculating effective task states", () => {
 
     it("effective state is recursively calculated #2", () => {
         const input =
-            "[x] open task\n" +
+            "[x] done task\n" +
             "[m] milestone :<<\n" +
             "[m] milestone :<<\n";
 
@@ -112,6 +113,18 @@ describe("calculating effective task states", () => {
         expect(dependencies.getEffectiveTaskState(task1)).toBe(EffectiveTaskState.Done);
         expect(dependencies.getEffectiveTaskState(task2)).toBe(EffectiveTaskState.Done);
         expect(dependencies.getEffectiveTaskState(task3)).toBe(EffectiveTaskState.Done);
+    });
+
+    it("marks tasks with start dates in the future as blocked", () => {
+        const input =
+            `[ ] open task :*${lightFormat(addDays(new Date(), 5), 'yyyy-MM-dd')} \n`;
+
+        const project = parseProject(input);
+        const dependencies = calculateDependencies(project, ProjectCalculationSettings.default());
+
+        const [task1] = project.tasks;
+
+        expect(dependencies.getEffectiveTaskState(task1)).toBe(EffectiveTaskState.Blocked);
     });
 
 });
