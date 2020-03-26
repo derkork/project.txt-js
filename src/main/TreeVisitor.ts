@@ -230,7 +230,7 @@ export class TreeVisitor
             let child = ctx.getChild(i);
             if (child instanceof TerminalNode) {
                 if (child.symbol.type === ProjectTxtLexer.TEXT) {
-                    let text = child.text;
+                    const text = child.text;
                     if (firstIsDone) {
                         last += text;
                     } else {
@@ -239,7 +239,16 @@ export class TreeVisitor
                 } else if (child.symbol.type === ProjectTxtLexer.NEW_LINE) {
                     firstIsDone = true;
                     last += child.text;
-                } else {
+                } else if (child.symbol.type === ProjectTxtLexer.DOUBLE_COLON) {
+                    const text = ':';
+                    if (firstIsDone) {
+                        last += text;
+                    }
+                    else {
+                        first += text;
+                    }
+                }
+                else {
                     // this actually should not happen
                     // TODO: +refactor decide for some error handling strategy.
                 }

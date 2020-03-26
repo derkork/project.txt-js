@@ -43,11 +43,12 @@ mode DATE_MODE;
     HYPHEN: '-';
     MONTH_OR_DAY: DIGIT DIGIT?;
     DATE_WHITESPACE: WHITESPACE -> popMode, popMode, type(TEXT);
+    DATE_NEWLINE: NEWLINE+ -> popMode, popMode, type(NEW_LINE);
 
 mode EMAIL_MODE;
     ADDRESS: ~[ \t\r\n]+;
     ADDRESS_WHITESPACE: WHITESPACE -> popMode, popMode, type(TEXT);
-    ADDRESS_NEWLINE: NEWLINE -> popMode, popMode, type(NEW_LINE);
+    ADDRESS_NEWLINE: NEWLINE+ -> popMode, popMode, type(NEW_LINE);
 
 mode DURATION_MODE;
     AMOUNT: DIGIT+;
@@ -55,6 +56,7 @@ mode DURATION_MODE;
     HOUR: 'h';
     MINUTE: 'm';
     DURATION_WHITESPACE: WHITESPACE -> popMode, popMode, type(TEXT);
+    DURATION_NEWLINE: NEWLINE+ -> popMode, popMode, type(NEW_LINE);
 
 mode COMMENT_MODE;
     COMMENT: ~[\r\n]+ -> channel(COMMENT_CHANNEL);
