@@ -144,8 +144,8 @@ export class TreeVisitor
 
         return new TreeElement(
             new Person(
-                ctx._start.line,
                 index,
+                ctx._start.line,
                 id,
                 text.last,
                 tags,
