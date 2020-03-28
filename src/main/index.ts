@@ -27,6 +27,7 @@ export {ProjectDependencies} from "./ProjectDependencies";
 export {EffectiveTaskState} from "./EffectiveTaskState";
 export {FinishDate} from "./FinishDate";
 export {ProjectCalculationSettings} from "./ProjectCalculationSettings";
+
 //#endregion
 
 /**
@@ -55,7 +56,7 @@ export function calculateDependencies(project: Project, settings: ProjectCalcula
     const dependencyMap = new Map<Task, Array<Task>>();
     const assignmentMap = new Map<Task, Array<Person>>();
     const finishDatesMap = new Map<Task, FinishDate>();
-    const effectiveTaskStateMap = new Map<Task,EffectiveTaskState>();
+    const effectiveTaskStateMap = new Map<Task, EffectiveTaskState>();
 
     for (const task of project.tasks) {
         if (!task.dependencies) {
@@ -84,7 +85,7 @@ export function calculateDependencies(project: Project, settings: ProjectCalcula
 
         if (visited.has(task)) {
             // we detected a circle.
-            let finishDate = new FinishDate(startOfDay(new Date()),true);
+            let finishDate = new FinishDate(startOfDay(new Date()), true);
             // put in some dummy date to break the circle.
             // TODO: we need some consistent error handling (also for parsing).
             finishDatesMap.set(task, finishDate);
@@ -96,22 +97,26 @@ export function calculateDependencies(project: Project, settings: ProjectCalcula
         const dependencies = dependencyMap.get(task) || []; // it actually cannot be undefined, but TS doesn't know.
 
         // find the largest finishing date of all the dependencies
-        const latest = dependencies.length > 0 ? dependencies
-            .map((it) => calculateFinishingDate(it))
+        const finishDatesOfDependencies = dependencies.map((it) => calculateFinishingDate(it));
+
+        const latest = finishDatesOfDependencies
             .reduce((previousValue, currentValue) => {
                 if (previousValue && previousValue.isAfterOrEqualTo(currentValue)) {
                     return previousValue;
                 }
-                return currentValue;
-            }) : new FinishDate(startOfDay(new Date()), false);
+                return currentValue
+            }, new FinishDate(startOfDay(new Date()), false));
 
         // find out the earliest date the dependencies will be finished.
         const dependenciesEarliestStart = latest.date;
-        const hasUnknowns = latest.hasUnknowns;
+        // if any of the input dependencies has unknowns, this task will also have unknowns.
+        const hasUnknowns = finishDatesOfDependencies
+            .map(it => it.hasUnknowns)
+            .reduce((previousValue, currentValue) => previousValue || currentValue, false);
 
         // if the task has a start date and this is later than the earliest start date
         // use the tasks start date as earliest start
-        const taskEarliestStart = task.startDate ?  max([task.startDate, dependenciesEarliestStart]) : dependenciesEarliestStart;
+        const taskEarliestStart = task.startDate ? max([task.startDate, dependenciesEarliestStart]) : dependenciesEarliestStart;
 
 
         // if the task is already done, it has no remaining effort and we can stop here.
@@ -143,7 +148,7 @@ export function calculateDependencies(project: Project, settings: ProjectCalcula
         // plus the already spent minutes are larger than one work day, we need to roll over the day once more.
         const minutesSpent = differenceInMinutes(endDateWithDaysApplied, startOfDay(endDateWithDaysApplied));
 
-        let finalEndDate:Date;
+        let finalEndDate: Date;
 
         if (minutesSpent + remainingMinutes >= minutesPerWorkDay) {
             // calculate how many minutes we have left after rolling over one more working day
@@ -155,13 +160,12 @@ export function calculateDependencies(project: Project, settings: ProjectCalcula
                     ? addDays(endDateWithDaysApplied, 1)
                     : addBusinessDays(endDateWithDaysApplied, 1),
                 remainingMinutesAfterRollOver);
-        }
-        else {
+        } else {
             // no roll-over needed, just add the remaining minutes
             finalEndDate = addMinutes(endDateWithDaysApplied, remainingMinutes);
         }
 
-        const result = new FinishDate(finalEndDate, hasUnknowns );
+        const result = new FinishDate(finalEndDate, hasUnknowns);
         finishDatesMap.set(task, result);
         return result;
     }
@@ -171,8 +175,7 @@ export function calculateDependencies(project: Project, settings: ProjectCalcula
     }
 
 
-
-    function calculateEffectiveTaskState(task:Task) : EffectiveTaskState {
+    function calculateEffectiveTaskState(task: Task): EffectiveTaskState {
         if (effectiveTaskStateMap.has(task)) {
             // @ts-ignore we know that the task is in the map
             return effectiveTaskStateMap.get(task);
@@ -185,7 +188,7 @@ export function calculateDependencies(project: Project, settings: ProjectCalcula
 
         visited.add(task);
 
-        switch(task.state) {
+        switch (task.state) {
             // the following tasks states are always IS states, that is they override the PLAN
             // e.g. if a standard task is marked as Done, this will not be changed by any
             // prerequisite task anymore. same goes for "on hold" and "in progress" tasks.

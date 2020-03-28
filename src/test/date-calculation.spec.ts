@@ -1,9 +1,9 @@
 // @ts-ignore
 import {parseProject} from './test-helpers';
-import {calculateDependencies, TaskState} from "../main";
+import {calculateDependencies} from "../main";
 import isSameDay from 'date-fns/isSameDay';
 import differenceInCalendarDays from 'date-fns/differenceInCalendarDays';
-import {ProjectCalculationSettings} from "../main/ProjectCalculationSettings";
+import {ProjectCalculationSettings} from "../main";
 
 
 describe("calculating task finish dates", () => {
@@ -43,7 +43,20 @@ describe("calculating task finish dates", () => {
         expect(secondFinishDate.hasUnknowns).toBeFalsy();
     });
 
+    it ("properly handles uncertainty in task chains", () => {
+        const input = "[ ] task without effort :#t1\n"+
+            "[ ] task with effort :~2d :#t2\n" +
+            "[ ] task depending on the other ones :~2d :<#t1 :<#t2";
 
+        const project = parseProject(input);
+        const dependencies = calculateDependencies(project, ProjectCalculationSettings.default());
+
+        const[task1, task2, task3] = project.tasks;
+        expect(dependencies.getFinishDate(task1).hasUnknowns).toBeTruthy();
+        expect(dependencies.getFinishDate(task2).hasUnknowns).toBeFalsy();
+        expect(dependencies.getFinishDate(task3).hasUnknowns).toBeTruthy();
+
+    });
 
 });
 
