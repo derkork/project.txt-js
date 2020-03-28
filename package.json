@@ -1,6 +1,6 @@
 {
     "name": "project.txt",
-    "version": "0.1.2",
+    "version": "0.1.3",
     "description": "A library for reading and evaluating project definitions in project.txt format.",
     "main": "lib/index.js",
     "types": "lib/index.d.ts",
