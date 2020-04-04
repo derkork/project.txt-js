@@ -48,7 +48,7 @@ export class ProjectDependencies {
      */
     getFinishDate(task: Task): FinishDate {
         // TODO: proper error handling
-        return this.finishDatesMap.get(task) || new FinishDate(new Date(), true);
+        return this.finishDatesMap.get(task) || new FinishDate(new Date(), true, false);
     }
 
     /**
