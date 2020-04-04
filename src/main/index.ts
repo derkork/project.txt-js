@@ -121,8 +121,14 @@ export function calculateDependencies(project: Project, settings: ProjectCalcula
 
         // if the task is already done, it has no remaining effort and we can stop here.
         // also if the task has no effort specification, there is nothing to calculate, so we can stop here as well.
-        if (task.state == TaskState.Done || !task.effort) {
-            const result = new FinishDate(taskEarliestStart, hasUnknowns || !task.effort);
+        if (task.state === TaskState.Done || !task.effort) {
+            const result = new FinishDate(taskEarliestStart,
+                // a task has unknowns if it is not yet done AND
+                task.state !== TaskState.Done && (
+                  hasUnknowns // some of it's prerequisites are having unknowns
+                  || !task.effort // OR the task itself has not specified any remaining effort
+                )
+            );
             finishDatesMap.set(task, result);
             return result;
         }

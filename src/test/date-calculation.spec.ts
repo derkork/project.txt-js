@@ -43,20 +43,35 @@ describe("calculating task finish dates", () => {
         expect(secondFinishDate.hasUnknowns).toBeFalsy();
     });
 
-    it ("properly handles uncertainty in task chains", () => {
-        const input = "[ ] task without effort :#t1\n"+
+    it("properly handles uncertainty in task chains", () => {
+        const input = "[ ] task without effort :#t1\n" +
             "[ ] task with effort :~2d :#t2\n" +
             "[ ] task depending on the other ones :~2d :<#t1 :<#t2";
 
         const project = parseProject(input);
         const dependencies = calculateDependencies(project, ProjectCalculationSettings.default());
 
-        const[task1, task2, task3] = project.tasks;
+        const [task1, task2, task3] = project.tasks;
         expect(dependencies.getFinishDate(task1).hasUnknowns).toBeTruthy();
         expect(dependencies.getFinishDate(task2).hasUnknowns).toBeFalsy();
         expect(dependencies.getFinishDate(task3).hasUnknowns).toBeTruthy();
 
     });
+
+    it("marks finished tasks as having a certain end date", () => {
+        const input = "[x] task 1 \n" +
+            "[x] task 2 :<<\n" +
+            "[ ] task 3 :~2d :<<";
+
+        const project = parseProject(input);
+        const dependencies = calculateDependencies(project, ProjectCalculationSettings.default());
+
+        const [task1, task2, task3] = project.tasks;
+        expect(dependencies.getFinishDate(task1).hasUnknowns).toBeFalsy();
+        expect(dependencies.getFinishDate(task2).hasUnknowns).toBeFalsy();
+        expect(dependencies.getFinishDate(task3).hasUnknowns).toBeFalsy();
+
+    })
 
 });
 

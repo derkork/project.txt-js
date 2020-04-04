@@ -14,9 +14,9 @@ export class FinishDate {
 
 
     constructor(date: Date,
-                hashUnknowns: boolean) {
+                hasUnknowns: boolean) {
         this.date = date;
-        this.hasUnknowns = hashUnknowns;
+        this.hasUnknowns = hasUnknowns;
     }
 
     isAfterOrEqualTo(other: FinishDate): boolean {
