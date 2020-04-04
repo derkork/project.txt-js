@@ -15,6 +15,7 @@ import startOfDay from 'date-fns/startOfDay';
 import addBusinessDays from 'date-fns/addBusinessDays';
 import addMinutes from 'date-fns/addMinutes';
 import isBefore from 'date-fns/isBefore';
+import isAfter from 'date-fns/isAfter';
 import differenceInMinutes from 'date-fns/differenceInMinutes';
 import {EffectiveTaskState} from "./EffectiveTaskState";
 
@@ -85,7 +86,7 @@ export function calculateDependencies(project: Project, settings: ProjectCalcula
 
         if (visited.has(task)) {
             // we detected a circle.
-            let finishDate = new FinishDate(startOfDay(new Date()), true);
+            let finishDate = new FinishDate(startOfDay(new Date()), true, false);
             // put in some dummy date to break the circle.
             // TODO: we need some consistent error handling (also for parsing).
             finishDatesMap.set(task, finishDate);
@@ -105,7 +106,7 @@ export function calculateDependencies(project: Project, settings: ProjectCalcula
                     return previousValue;
                 }
                 return currentValue
-            }, new FinishDate(startOfDay(new Date()), false));
+            }, new FinishDate(startOfDay(new Date()), false, false));
 
         // find out the earliest date the dependencies will be finished.
         const dependenciesEarliestStart = latest.date;
@@ -122,18 +123,30 @@ export function calculateDependencies(project: Project, settings: ProjectCalcula
         // if the task is already done, it has no remaining effort and we can stop here.
         // also if the task has no effort specification, there is nothing to calculate, so we can stop here as well.
         if (task.state === TaskState.Done || !task.effort) {
+            // a task has unknowns if it is not yet done AND
+            const thisTaskHasUnknowns = task.state !== TaskState.Done && (
+                hasUnknowns // some of it's prerequisites are having unknowns
+                || !task.effort // OR the task itself has not specified any remaining effort
+            );
+
+            // a task is overdue if it is not done
+            const thisTaskIsOverdue: boolean = task.state !== TaskState.Done
+                // AND has a due date
+                && task.dueDate !== undefined
+                // AND the earliest start date is after the due date
+                // note that in this case we don't have a task duration so we don't need to
+                // take this into account here.
+                && isAfter(taskEarliestStart, task.dueDate);
+
             const result = new FinishDate(taskEarliestStart,
-                // a task has unknowns if it is not yet done AND
-                task.state !== TaskState.Done && (
-                  hasUnknowns // some of it's prerequisites are having unknowns
-                  || !task.effort // OR the task itself has not specified any remaining effort
-                )
+                thisTaskHasUnknowns,
+                thisTaskIsOverdue
             );
             finishDatesMap.set(task, result);
             return result;
         }
 
-        // otherwise we can to calculate stuff
+        // otherwise we need to calculate stuff
         // for calculation we normalize everything down to minutes.
         const minutesPerWorkDay = settings.hoursPerDay * 60;
 
@@ -171,7 +184,13 @@ export function calculateDependencies(project: Project, settings: ProjectCalcula
             finalEndDate = addMinutes(endDateWithDaysApplied, remainingMinutes);
         }
 
-        const result = new FinishDate(finalEndDate, hasUnknowns);
+        const result = new FinishDate(finalEndDate,
+            hasUnknowns,
+            // it is overdue when the task has a due date
+            task.dueDate !== undefined
+            // and the calculated end date is after the due date
+            && isAfter(finalEndDate, task.dueDate)
+        );
         finishDatesMap.set(task, result);
         return result;
     }

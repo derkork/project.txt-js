@@ -12,11 +12,18 @@ export class FinishDate {
      */
     readonly hasUnknowns: boolean;
 
+    /**
+     * If the task's projected finish date is after the due date then this is true, otherwise this is false.
+     */
+    readonly cannotFinishInTime: boolean;
+
 
     constructor(date: Date,
-                hasUnknowns: boolean) {
+                hasUnknowns: boolean,
+                cannotFinishInTime: boolean) {
         this.date = date;
         this.hasUnknowns = hasUnknowns;
+        this.cannotFinishInTime = cannotFinishInTime;
     }
 
     isAfterOrEqualTo(other: FinishDate): boolean {

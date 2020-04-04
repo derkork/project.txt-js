@@ -1,8 +1,9 @@
 // @ts-ignore
-import {parseProject} from './test-helpers';
+import {parseProject, toYearMonthDay} from './test-helpers';
 import {calculateDependencies} from "../main";
 import isSameDay from 'date-fns/isSameDay';
 import differenceInCalendarDays from 'date-fns/differenceInCalendarDays';
+import addDays from 'date-fns/addDays';
 import {ProjectCalculationSettings} from "../main";
 
 
@@ -70,8 +71,31 @@ describe("calculating task finish dates", () => {
         expect(dependencies.getFinishDate(task1).hasUnknowns).toBeFalsy();
         expect(dependencies.getFinishDate(task2).hasUnknowns).toBeFalsy();
         expect(dependencies.getFinishDate(task3).hasUnknowns).toBeFalsy();
+    });
 
-    })
+    it("calculates if a task is overdue", () => {
+
+        const today = toYearMonthDay(new Date());
+        const inAWeek = toYearMonthDay(addDays(new Date(), 7));
+
+        const input = "[ ] tasks with no due date are not overdue \n" +
+            "[x] done tasks are not overdue :!2010-10-10 \n" +
+            `[ ] tasks due in a week are not overdue :!${inAWeek} \n` +
+            `[ ] tasks due today are not overdue :!${today} \n` +
+            "[ ] tasks due in the past are overdue :!2010-10-10 \n" +
+            `[ ] tasks due today that take more time than available are overdue :!${today} :~1d`;
+
+        const project = parseProject(input);
+        const dependencies = calculateDependencies(project, ProjectCalculationSettings.default());
+
+        const [task1, task2, task3, task4, task5, task6] = project.tasks;
+        expect(dependencies.getFinishDate(task1).cannotFinishInTime).toBeFalsy();
+        expect(dependencies.getFinishDate(task2).cannotFinishInTime).toBeFalsy();
+        expect(dependencies.getFinishDate(task3).cannotFinishInTime).toBeFalsy();
+        expect(dependencies.getFinishDate(task4).cannotFinishInTime).toBeFalsy();
+        expect(dependencies.getFinishDate(task5).cannotFinishInTime).toBeTruthy();
+        expect(dependencies.getFinishDate(task6).cannotFinishInTime).toBeTruthy();
+    });
 
 });
 
