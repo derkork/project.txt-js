@@ -1,17 +1,17 @@
 // @ts-ignore
 import {parseProject} from './test-helpers';
 import {calculateDependencies} from "../main";
-import {ProjectCalculationSettings} from "../main/ProjectCalculationSettings";
+import {ProjectCalculationSettings} from "../main";
 
 describe("calculating dependencies", () => {
 
     it("properly calculates dependencies", () => {
         const input =
-            "[ ] this is a task :#id1 :@tagged\n" +
-            "[ ] this is another task :<#id1 :@tagged\n" +
-            "[ ] this is a third task :<@tagged\n" +
-            "[ ] this is a fourth task :@label:value\n" +
-            "[ ] this is a fifth task :<@label:value";
+            "^[ ] this is a task ^#id1 ^@tagged\n" +
+            "^[ ] this is another task ^<#id1 ^@tagged\n" +
+            "^[ ] this is a third task ^<@tagged\n" +
+            "^[ ] this is a fourth task ^@label:value\n" +
+            "^[ ] this is a fifth task ^<@label:value";
 
         const project = parseProject(input);
         const dependencies = calculateDependencies(project, ProjectCalculationSettings.default());

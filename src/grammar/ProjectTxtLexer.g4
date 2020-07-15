@@ -5,25 +5,28 @@ channels {
 }
 
 fragment WHITESPACE: [ \t]+;
-fragment NEWLINE: [\r\n]+;
+fragment NEWLINE: ( '\r\n' | '\r' | '\n' );
 fragment DIGIT: [0-9];
 
-TASK_STATE_OPEN: '[ ]';
-TASK_STATE_DONE: ('[x]' | '[X]');
-TASK_STATE_ON_HOLD: '[!]';
-TASK_STATE_IN_PROGRESS: '[>]';
-TASK_STATE_MILESTONE: ('[m]' | '[M]');
-
-COMMENT_START: '#' -> channel(COMMENT_CHANNEL), pushMode(COMMENT_MODE);
-PERSON_START: '+';
-
-DOUBLE_COLON: '::';
-INSTRUCTION: ':' -> pushMode(INSTRUCTION_MODE);
+WS: WHITESPACE -> skip;
+LINE_COMMENT: '#' ~[\r\n]* -> skip;
+INSTRUCTION_ESCAPE: '^^' -> pushMode(TEXT_MODE);
+// the two pushMode instructions are to avoid the case when you put a comment
+// directly after the first instruction in a line. it ensures that whenever we
+// have something that is not a comment in the line we stay in text mode until the
+// next line is reached. only at the next line a comment is allowed again.
+INSTRUCTION: '^' -> pushMode(TEXT_MODE), pushMode(INSTRUCTION_MODE);
 NEW_LINE: NEWLINE;
 
-TEXT: ~[:+[#\r\n]+;
+TEXT: ~[^\r\n]+ -> pushMode(TEXT_MODE);
 
 mode INSTRUCTION_MODE;
+    TASK_STATE_OPEN: '[ ]';
+    TASK_STATE_DONE: ('[x]' | '[X]');
+    TASK_STATE_ON_HOLD: '[!]';
+    TASK_STATE_IN_PROGRESS: '[>]';
+    TASK_STATE_MILESTONE: ('[m]' | '[M]');
+    PERSON_START: '/';
     IDREF: '#';
     LABELREF: '@';
     DEPENDENCY: '<';
@@ -58,8 +61,8 @@ mode DURATION_MODE;
     DURATION_WHITESPACE: WHITESPACE -> popMode, popMode, type(TEXT);
     DURATION_NEWLINE: NEWLINE+ -> popMode, popMode, type(NEW_LINE);
 
-mode COMMENT_MODE;
-    COMMENT: ~[\r\n]+ -> channel(COMMENT_CHANNEL);
-    END_OF_COMMENT: ([\r\n]+ | EOF) -> channel(COMMENT_CHANNEL), popMode;
-
-
+mode TEXT_MODE;
+    TM_TEXT: ~[^\r\n]+ -> type(TEXT);
+    TM_INSTRUCTION: '^' -> type(INSTRUCTION), pushMode(INSTRUCTION_MODE);
+    TM_INSTRUCTION_ESCAPE: '^^' -> type(INSTRUCTION_ESCAPE);
+    TM_NEW_LINE: NEWLINE -> type(NEW_LINE), popMode;

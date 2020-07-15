@@ -6,8 +6,8 @@ import lightFormat from 'date-fns/lightFormat';
 
 describe("parsing tasks", () => {
     it.each([
-            "[ ] This is a task :#task It has notes.",
-            "[ ] This is a task\nIt has notes."
+            "^[ ] This is a task ^#task It has notes.",
+            "^[ ] This is a task\nIt has notes."
         ]
     )("correctly splits title and notes on newline or first instruction", (input: string) => {
         const project = parseProject(input);
@@ -22,9 +22,9 @@ describe("parsing tasks", () => {
 
     it("assigns indices to tasks", () => {
         const input =
-            "[ ] some task\n" +
-            "+  some person \n" +
-            "[ ] some other task";
+            "^[ ] some task\n" +
+            "^/  some person \n" +
+            "^[ ] some other task";
         const project = parseProject(input);
         const [task1, task2] = project.tasks;
 
@@ -33,7 +33,7 @@ describe("parsing tasks", () => {
     });
 
     it("correctly parses tags for tasks", () => {
-        const input = "[ ] some task :@tag1 :@tag2";
+        const input = "^[ ] some task ^@tag1 ^@tag2";
 
         const project = parseProject(input);
         const task = project.tasks[0];
@@ -44,7 +44,7 @@ describe("parsing tasks", () => {
     });
 
     it("correctly parses labels for tasks", () => {
-        const input = "[ ] some task :@label1:value1 :@label1:value2 :@label2:value1";
+        const input = "^[ ] some task ^@label1:value1 ^@label1:value2 ^@label2:value1";
         const project = parseProject(input);
         const task = project.tasks[0];
 
@@ -64,7 +64,7 @@ describe("parsing tasks", () => {
     });
 
     it("correctly parses due dates for tasks", () => {
-        const input = "[ ] some task :!2020-10-10";
+        const input = "^[ ] some task ^!2020-10-10";
 
         const project = parseProject(input);
         const task = project.tasks[0];
@@ -75,7 +75,7 @@ describe("parsing tasks", () => {
     });
 
     it("correctly parses do dates for tasks", () => {
-        const input = "[ ] some task :+2020-10-10";
+        const input = "^[ ] some task ^+2020-10-10";
 
         const project = parseProject(input);
         const task = project.tasks[0];
@@ -85,7 +85,7 @@ describe("parsing tasks", () => {
     });
 
     it("correctly parses start dates for tasks", () => {
-        const input = "[ ] some task :*2020-10-10";
+        const input = "^[ ] some task ^*2020-10-10\n";
 
         const project = parseProject(input);
         const task = project.tasks[0];
@@ -95,7 +95,7 @@ describe("parsing tasks", () => {
     });
 
     it("correctly parses effort for tasks", () => {
-        const input = "[ ] some task :~1d2h4m";
+        const input = "^[ ] some task ^~1d2h4m";
 
         const project = parseProject(input);
         const task = project.tasks[0];
@@ -108,7 +108,7 @@ describe("parsing tasks", () => {
 
 
     it("correctly parses ids for tasks", () => {
-        const input = "[ ] some task :#tsk1";
+        const input = "^[ ] some task ^#tsk1";
 
         const project = parseProject(input);
         const task = project.tasks[0];
@@ -119,8 +119,8 @@ describe("parsing tasks", () => {
 
     it("correctly parses dependencies using an ID", () => {
         const input =
-            "[ ] some task :#tsk1\n" +
-            "[ ] some other task :<#tsk1";
+            "^[ ] some task ^#tsk1\n" +
+            "^[ ] some other task ^<#tsk1";
 
         const project = parseProject(input);
         const [firstTask, secondTask] = project.tasks;
@@ -134,9 +134,9 @@ describe("parsing tasks", () => {
 
     it("correctly parses dependencies using a tag", () => {
         const input =
-            "[ ] some task :@tag\n" +
-            "[ ] yet another task\n" +
-            "[ ] some other task :<@tag";
+            "^[ ] some task ^@tag\n" +
+            "^[ ] yet another task\n" +
+            "^[ ] some other task ^<@tag";
 
         const project = parseProject(input);
         const [firstTask, secondTask, thirdTask] = project.tasks;
@@ -152,9 +152,9 @@ describe("parsing tasks", () => {
 
     it("correctly parses dependencies using a label", () => {
         const input =
-            "[ ] some task :@foo:bar\n" +
-            "[ ] yet another task :@foo:bar\n" +
-            "[ ] some other task :<@foo:bar";
+            "^[ ] some task ^@foo:bar\n" +
+            "^[ ] yet another task ^@foo:bar\n" +
+            "^[ ] some other task ^<@foo:bar";
 
         const project = parseProject(input);
         const [firstTask, secondTask, thirdTask] = project.tasks;
@@ -169,8 +169,8 @@ describe("parsing tasks", () => {
 
     it("correctly parses dependencies using the previous task shortcut", () => {
         const input =
-            "[ ] a task\n" +
-            "[ ] a task depending on the previous one :<<\n";
+            "^[ ] a task\n" +
+            "^[ ] a task depending on the previous one ^<<\n";
 
         const project = parseProject(input);
         const [firstTask, secondTask] = project.tasks;
@@ -184,9 +184,9 @@ describe("parsing tasks", () => {
 
     it("correctly parses mixed dependencies", () => {
         const input =
-            "[ ] some task :@foo\n" +
-            "[ ] yet another task :<@foo :#tsk1\n" +
-            "[ ] some other task :<@foo :<#tsk1";
+            "^[ ] some task ^@foo\n" +
+            "^[ ] yet another task ^<@foo ^#tsk1\n" +
+            "^[ ] some other task ^<@foo ^<#tsk1";
 
         const project = parseProject(input);
         const [firstTask, secondTask, thirdTask] = project.tasks;
@@ -204,8 +204,8 @@ describe("parsing tasks", () => {
 
     it("correctly parses assigments with ids", () => {
         const input =
-            "+ Jeff :#jeff\n" +
-            "[ ] Task for Jeff :>#jeff\n";
+            "^/ Jeff ^#jeff\n" +
+            "^[ ] Task for Jeff ^>#jeff\n";
 
         const project = parseProject(input);
         const task = project.tasks[0];
@@ -217,8 +217,8 @@ describe("parsing tasks", () => {
 
     it("correctly parses assigments with tags", () => {
         const input =
-            "+ Jeff :@tag\n" +
-            "[ ] Task for Jeff :>@tag\n";
+            "^/ Jeff ^@tag\n" +
+            "^[ ] Task for Jeff ^>@tag\n";
 
         const project = parseProject(input);
         const task = project.tasks[0];
@@ -230,9 +230,9 @@ describe("parsing tasks", () => {
 
     it("correctly parses assigments with labels", () => {
         const input =
-            "+ Jeff :@team:red\n" +
-            "+ Josh :@team:blue\n" +
-            "[ ] Task for team red :>@team:red\n";
+            "^/ Jeff ^@team:red\n" +
+            "^/ Josh ^@team:blue\n" +
+            "^[ ] Task for team red ^>@team:red\n";
 
         const project = parseProject(input);
         const task = project.tasks[0];
@@ -244,12 +244,12 @@ describe("parsing tasks", () => {
     });
 
     it.each([
-            ["[ ] open task", TaskState.Open],
-            ["[x] done task", TaskState.Done],
-            ["[m] milestone task", TaskState.Milestone],
-            ["[M] milestone task", TaskState.Milestone],
-            ["[!] on-hold task", TaskState.OnHold],
-            ["[>] in-progress task", TaskState.InProgress],
+            ["^[ ] open task", TaskState.Open],
+            ["^[x] done task", TaskState.Done],
+            ["^[m] milestone task", TaskState.Milestone],
+            ["^[M] milestone task", TaskState.Milestone],
+            ["^[!] on-hold task", TaskState.OnHold],
+            ["^[>] in-progress task", TaskState.InProgress],
         ]
     )("correctly parses task states: %s => %s", (input: string, expected: TaskState) => {
         const task = parseProject(input).tasks[0];

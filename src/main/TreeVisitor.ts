@@ -239,8 +239,8 @@ export class TreeVisitor
                 } else if (child.symbol.type === ProjectTxtLexer.NEW_LINE) {
                     firstIsDone = true;
                     last += child.text;
-                } else if (child.symbol.type === ProjectTxtLexer.DOUBLE_COLON) {
-                    const text = ':';
+                } else if (child.symbol.type === ProjectTxtLexer.INSTRUCTION_ESCAPE) {
+                    const text = '^';
                     if (firstIsDone) {
                         last += text;
                     }

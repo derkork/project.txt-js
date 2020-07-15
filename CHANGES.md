@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.0] - 2020-07-15
+### Breaking changes
+* Parsing is now implemented according to version 2.0.0 of the specification. See the change log of the specification for details.
+* Comments are now only recognized when the line starts with them. This avoids stripping out URI fragments from URLs.
+
 ## [0.2.0] - 2020-04-04
 ### Added
 * Finish date calculations now calculates if a task cannot finish in time.

@@ -4,8 +4,8 @@ import {parseProject} from './test-helpers';
 
 describe("parsing people", () => {
     it.each([
-            "+ John Doe :#john works on the project",
-            "+ John Doe \r\n works on the project"
+            "^/ John Doe ^#john works on the project",
+            "^/ John Doe \r\n works on the project"
         ]
     )("correctly splits name and notes on newline for persons", (input: string) => {
         let project = parseProject(input);
@@ -19,7 +19,7 @@ describe("parsing people", () => {
     });
 
     it("correctly parses tags for persons", () => {
-        let input = "+ some person :@tag1 :@tag2";
+        let input = "^/ some person ^@tag1 ^@tag2";
 
         let project = parseProject(input);
         let person = project.persons[0];
@@ -31,10 +31,10 @@ describe("parsing people", () => {
 
     it("assigns indices to persons", () => {
         const input =
-            "+ another person\n"+
-            "[ ] some task\n" +
-            "+  some person \n" +
-            "[ ] some other task";
+            "^/ another person\n"+
+            "^[ ] some task\n" +
+            "^/  some person \n" +
+            "^[ ] some other task";
         const project = parseProject(input);
         const [person1, person2] = project.persons;
 
@@ -44,7 +44,7 @@ describe("parsing people", () => {
 
 
     it("correctly parses ids for persons", () => {
-        const input = "+ some person :#person";
+        const input = "^/ some person ^#person";
 
         const project = parseProject(input);
         const person = project.persons[0];
@@ -54,7 +54,7 @@ describe("parsing people", () => {
 
 
     it("correctly parses labels for persons", () => {
-        let input = "+ some person :@label1:value1 :@label1:value2 :@label2:value1";
+        let input = "^/ some person ^@label1:value1 ^@label1:value2 ^@label2:value1";
         let project = parseProject(input);
         let person = project.persons[0];
 

@@ -10,8 +10,8 @@ import {ProjectCalculationSettings} from "../main";
 describe("calculating task finish dates", () => {
     it("calculates proper date if no dependencies are set", () => {
         const input =
-            "[ ] some task\n" +
-            "[ ] some other task";
+            "^[ ] some task\n" +
+            "^[ ] some other task";
         const project = parseProject(input);
         const dependencies = calculateDependencies(project, ProjectCalculationSettings.default());
 
@@ -29,8 +29,8 @@ describe("calculating task finish dates", () => {
 
     it("calculates finish date for dependent tasks", () => {
         const input =
-            "[ ] some task :~3d \n" +
-            "[ ] some other task :~3d :<<";
+            "^[ ] some task ^~3d \n" +
+            "^[ ] some other task ^~3d ^<<";
 
         const project = parseProject(input);
         const dependencies = calculateDependencies(project, ProjectCalculationSettings.default());
@@ -45,9 +45,9 @@ describe("calculating task finish dates", () => {
     });
 
     it("properly handles uncertainty in task chains", () => {
-        const input = "[ ] task without effort :#t1\n" +
-            "[ ] task with effort :~2d :#t2\n" +
-            "[ ] task depending on the other ones :~2d :<#t1 :<#t2";
+        const input = "^[ ] task without effort ^#t1\n" +
+            "^[ ] task with effort ^~2d :#t2\n" +
+            "^[ ] task depending on the other ones ^~2d ^<#t1 ^<#t2";
 
         const project = parseProject(input);
         const dependencies = calculateDependencies(project, ProjectCalculationSettings.default());
@@ -60,9 +60,9 @@ describe("calculating task finish dates", () => {
     });
 
     it("marks finished tasks as having a certain end date", () => {
-        const input = "[x] task 1 \n" +
-            "[x] task 2 :<<\n" +
-            "[ ] task 3 :~2d :<<";
+        const input = "^[x] task 1 \n" +
+            "^[x] task 2 ^<<\n" +
+            "^[ ] task 3 ^~2d :<<";
 
         const project = parseProject(input);
         const dependencies = calculateDependencies(project, ProjectCalculationSettings.default());
@@ -78,12 +78,12 @@ describe("calculating task finish dates", () => {
         const today = toYearMonthDay(new Date());
         const inAWeek = toYearMonthDay(addDays(new Date(), 7));
 
-        const input = "[ ] tasks with no due date are not overdue \n" +
-            "[x] done tasks are not overdue :!2010-10-10 \n" +
-            `[ ] tasks due in a week are not overdue :!${inAWeek} \n` +
-            `[ ] tasks due today are not overdue :!${today} \n` +
-            "[ ] tasks due in the past are overdue :!2010-10-10 \n" +
-            `[ ] tasks due today that take more time than available are overdue :!${today} :~1d`;
+        const input = "^[ ] tasks with no due date are not overdue \n" +
+            "^[x] done tasks are not overdue ^!2010-10-10 \n" +
+            `^[ ] tasks due in a week are not overdue :!${inAWeek} \n` +
+            `^[ ] tasks due today are not overdue ^!${today} \n` +
+            "^[ ] tasks due in the past are overdue ^!2010-10-10 \n" +
+            `^[ ] tasks due today that take more time than available are overdue ^!${today} ^~1d`;
 
         const project = parseProject(input);
         const dependencies = calculateDependencies(project, ProjectCalculationSettings.default());

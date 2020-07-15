@@ -1,6 +1,6 @@
 {
     "name": "project.txt",
-    "version": "0.2.0",
+    "version": "1.0.0",
     "description": "A library for reading and evaluating project definitions in project.txt format.",
     "main": "lib/index.js",
     "types": "lib/index.d.ts",
@@ -15,17 +15,17 @@
     "author": "Jan Thomä (https://github.com/derkork/project.txt-js)",
     "license": "MIT",
     "devDependencies": {
-        "@types/jest": "^25.1.1",
-        "@typescript-eslint/eslint-plugin": "^2.19.0",
-        "@typescript-eslint/parser": "^2.19.0",
+        "@types/jest": "^25.2.3",
+        "@typescript-eslint/eslint-plugin": "^2.34.0",
+        "@typescript-eslint/parser": "^2.34.0",
         "antlr4ts-cli": "^0.5.0-alpha.3",
         "eslint": "^6.8.0",
-        "eslint-config-airbnb-base": "^14.0.0",
-        "eslint-plugin-import": "^2.20.1",
-        "jest": "^25.1.0",
-        "rimraf": "^3.0.1",
-        "ts-jest": "^25.1.0",
-        "typescript": "^3.7.5"
+        "eslint-config-airbnb-base": "^14.2.0",
+        "eslint-plugin-import": "^2.21.2",
+        "jest": "^25.5.4",
+        "rimraf": "^3.0.2",
+        "ts-jest": "^25.5.1",
+        "typescript": "^3.9.5"
     },
     "jest": {
         "transform": {
@@ -38,6 +38,6 @@
     },
     "dependencies": {
         "antlr4ts": "^0.5.0-alpha.3",
-        "date-fns": "^2.11.0"
+        "date-fns": "^2.14.0"
     }
 }

@@ -9,11 +9,11 @@ import {addDays, lightFormat} from "date-fns";
 describe("calculating effective task states", () => {
     it("calculates proper state if no dependencies are set", () => {
         const input =
-            '[ ] open task\n' +
-            "[>] in progress task \n" +
-            "[x] done task \n" +
-            "[!] on hold task \n" +
-            "[m] Milestone";
+            '^[ ] open task\n' +
+            "^[>] in progress task \n" +
+            "^[x] done task \n" +
+            "^[!] on hold task \n" +
+            "^[m] Milestone";
         const project = parseProject(input);
         const dependencies = calculateDependencies(project, ProjectCalculationSettings.default());
 
@@ -29,8 +29,8 @@ describe("calculating effective task states", () => {
 
     it("unfinished prerequisites block open tasks", () => {
         const input =
-            "[ ] open task\n" +
-            "[ ] open task :<<\n";
+            "^[ ] open task\n" +
+            "^[ ] open task ^<<\n";
 
         const project = parseProject(input);
         const dependencies = calculateDependencies(project, ProjectCalculationSettings.default());
@@ -43,8 +43,8 @@ describe("calculating effective task states", () => {
 
     it("finished prerequisites don't block open tasks", () => {
         const input =
-            "[x] open task\n" +
-            "[ ] open task :<<\n";
+            "^[x] open task\n" +
+            "^[ ] open task ^<<\n";
 
         const project = parseProject(input);
         const dependencies = calculateDependencies(project, ProjectCalculationSettings.default());
@@ -57,8 +57,8 @@ describe("calculating effective task states", () => {
 
     it("unfinished prerequisites block milestones", () => {
         const input =
-            "[ ] open task\n" +
-            "[m] milestone :<<\n";
+            "^[ ] open task\n" +
+            "^[m] milestone ^<<\n";
 
         const project = parseProject(input);
         const dependencies = calculateDependencies(project, ProjectCalculationSettings.default());
@@ -71,8 +71,8 @@ describe("calculating effective task states", () => {
 
     it("milestones are done when all prerequisites are done", () => {
         const input =
-            "[x] open task\n" +
-            "[m] milestone :<<\n";
+            "^[x] open task\n" +
+            "^[m] milestone ^<<\n";
 
         const project = parseProject(input);
         const dependencies = calculateDependencies(project, ProjectCalculationSettings.default());
@@ -85,9 +85,9 @@ describe("calculating effective task states", () => {
 
     it("effective state is recursively calculated", () => {
         const input =
-            "[ ] open task\n" +
-            "[m] milestone :<<\n" +
-            "[m] milestone :<<\n";
+            "^[ ] open task\n" +
+            "^[m] milestone ^<<\n" +
+            "^[m] milestone ^<<\n";
 
         const project = parseProject(input);
         const dependencies = calculateDependencies(project, ProjectCalculationSettings.default());
@@ -101,9 +101,9 @@ describe("calculating effective task states", () => {
 
     it("effective state is recursively calculated #2", () => {
         const input =
-            "[x] done task\n" +
-            "[m] milestone :<<\n" +
-            "[m] milestone :<<\n";
+            "^[x] done task\n" +
+            "^[m] milestone ^<<\n" +
+            "^[m] milestone ^<<\n";
 
         const project = parseProject(input);
         const dependencies = calculateDependencies(project, ProjectCalculationSettings.default());
@@ -117,7 +117,7 @@ describe("calculating effective task states", () => {
 
     it("marks tasks with start dates in the future as blocked", () => {
         const input =
-            `[ ] open task :*${lightFormat(addDays(new Date(), 5), 'yyyy-MM-dd')} \n`;
+            `^[ ] open task ^*${lightFormat(addDays(new Date(), 5), 'yyyy-MM-dd')} \n`;
 
         const project = parseProject(input);
         const dependencies = calculateDependencies(project, ProjectCalculationSettings.default());
